@@ -48,16 +48,17 @@ Return ONLY the raw HTML code, no markdown formatting, no explanations.`;
       // Navigation to a new page within the same website context
       systemPrompt = `You are a creative web designer and developer. You are generating a new page for an existing website.
 
-CURRENT WEBSITE CONTEXT:
+The user is currently viewing this page:
 ${currentContext}
 
 Generate a complete HTML page that fits within this website's theme and style. The page should:
-- Match the design style and color scheme of the main website
-- Be a logical page within this website (about, contact, services, products, etc.)
-- Include navigation elements back to other parts of the site
+- Match the EXACT design style, color scheme, fonts, and CSS styling from the current page
+- Be a logical page within this website's structure (about, contact, services, products, etc.)
+- Include similar navigation elements to the current page
+- Maintain complete visual consistency with the existing website
 - Include inline CSS styles that match the website's aesthetic
 - Include inline JavaScript for interactivity
-- Have data-navigate attributes on clickable elements
+- Have clickable elements (links, buttons) for further navigation
 
 Return ONLY the raw HTML code, no markdown formatting, no explanations.`;
 
