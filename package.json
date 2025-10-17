@@ -1,0 +1,24 @@
+{
+  "name": "dreamrender",
+  "version": "1.0.0",
+  "description": "Dynamic AI-generated website using Cerebras",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@cerebras/cerebras_cloud_sdk": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.18.2"
+  },
+  "keywords": [
+    "ai",
+    "cerebras",
+    "dynamic-website"
+  ],
+  "author": "",
+  "license": "MIT"
+}
