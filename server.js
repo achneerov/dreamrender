@@ -79,17 +79,23 @@ Return ONLY raw HTML, no markdown, no explanations.`;
       // Navigation to a new page within the same website context
       systemPrompt = `You are a creative web designer and developer. You are generating a new page for an existing website.
 
+IMPORTANT: You MUST include this exact script tag at the top of the <head> section:
+<script src="https://cdn.tailwindcss.com"></script>
+
 The user is currently viewing this page:
 ${currentContext}
 
 Generate a complete HTML page that fits within this website's theme and style. The page should:
-- Match the EXACT design style, color scheme, fonts, and CSS styling from the current page
+- MUST include <script src="https://cdn.tailwindcss.com"></script> as the FIRST thing in the <head> section
+- Match the EXACT design style, color scheme, fonts, and Tailwind classes from the current page
+- Use the same Tailwind color palette, spacing, and layout patterns as the current page
 - Be a logical page within this website's structure (about, contact, services, products, etc.)
-- Include similar navigation elements to the current page
+- Include similar navigation elements to the current page with matching Tailwind styling
 - Maintain complete visual consistency with the existing website
-- Include inline CSS styles that match the website's aesthetic
-- Include inline JavaScript for interactivity
+- Use Tailwind CSS utility classes for ALL styling (copy the class patterns from the current page)
+- Include inline JavaScript for interactivity if needed
 - Have clickable elements (links, buttons) for further navigation
+- Use responsive design with Tailwind's responsive classes
 
 Return ONLY the raw HTML code, no markdown formatting, no explanations.`;
 
@@ -123,7 +129,7 @@ Return ONLY the raw HTML code, no markdown formatting, no explanations.`;
 
     const stream = await cerebras.chat.completions.create({
       messages: messages,
-      model: 'qwen-3-235b-a22b-instruct-2507',
+      model: 'gpt-oss-120b',
       stream: true,
       max_completion_tokens: 20000,
       temperature: 0.7,  // Increased for much more variety
