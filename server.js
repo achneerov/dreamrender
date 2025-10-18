@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { readFileSync } from 'fs';
 import 'dotenv/config';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -14,6 +15,16 @@ const PORT = process.env.PORT || 3000;
 const cerebras = new Cerebras({
   apiKey: process.env.CEREBRAS_API_KEY
 });
+
+// Load keywords from JSON file
+const keywordsData = JSON.parse(readFileSync(join(__dirname, 'keywords.json'), 'utf-8'));
+const keywords = keywordsData.keywords;
+
+// Function to get random keywords
+function getRandomKeywords(count = 10) {
+  const shuffled = [...keywords].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+}
 
 app.use(cors());
 app.use(express.json());
@@ -32,18 +43,38 @@ app.post('/api/generate', async (req, res) => {
 
     if (!currentContext) {
       // Initial website generation
-      systemPrompt = `You are a creative web designer and developer. Generate a complete, functional HTML page for a random website concept. The HTML should be:
-- Complete with <!DOCTYPE html>, head, and body tags
-- Include inline CSS styles in a <style> tag for beautiful design
-- Include inline JavaScript in a <script> tag for any interactivity
-- Have multiple clickable elements (navigation links, buttons, etc.) that users can click on
-- Be creative and unique - could be any type of website (business, game, blog, portfolio, store, etc.)
-- Make it visually appealing with good design principles
-- Include data-navigate attributes on clickable elements to enable navigation
+      // Get random keywords to inspire variety
+      const randomWords = getRandomKeywords(5);  // Reduced to 5 for clarity
+      console.log('Selected keywords:', randomWords);
 
-Return ONLY the raw HTML code, no markdown formatting, no explanations.`;
+      systemPrompt = `You are an expert web designer creating a visually stunning website for: ${randomWords.join(', ')}
 
-      userPrompt = prompt || "Create a random, creative website";
+MANDATORY REQUIREMENTS:
+- Create a website that is themed around: ${randomWords.join(', ')}
+- Example: if keywords are "dental, toys" then make "Dental Toys for Kids" NOT "Creative Design Studio"
+
+DESIGN REQUIREMENTS - MAKE IT IMPRESSIVE:
+- Use modern, eye-catching color gradients and schemes
+- Include stunning visual effects (hover effects, animations, transitions)
+- Use creative layouts with interesting sections and cards
+- Add beautiful typography with multiple font weights
+- Include CSS animations and smooth transitions
+- Make it look like a premium, professional website
+- Use modern CSS features (flexbox, grid, box-shadows, border-radius)
+- Add interactive elements with JavaScript
+- Make buttons and links have satisfying hover effects
+- Give the website a surreal, dreamlike, ethereal atmosphere (but do NOT use the word "dream" anywhere in the website)
+- Use unconventional color combinations and flowing animations to create an otherworldly feel
+
+The HTML must:
+- Have <!DOCTYPE html>, head, body tags
+- Include impressive inline CSS in <style> tag
+- Include inline JavaScript for interactivity
+- Have clickable links/buttons with data-navigate attributes
+
+Return ONLY raw HTML, no markdown, no explanations.`;
+
+      userPrompt = prompt || `Create a visually stunning, impressive website for a business called "${randomWords[0]} ${randomWords[1]}" that sells/provides ${randomWords[2]} and ${randomWords[3]} services. Make it look modern, beautiful, and professional with amazing visual design.`;
     } else {
       // Navigation to a new page within the same website context
       systemPrompt = `You are a creative web designer and developer. You are generating a new page for an existing website.
@@ -84,12 +115,18 @@ Return ONLY the raw HTML code, no markdown formatting, no explanations.`;
       }
     ];
 
+    console.log('\n=== SYSTEM PROMPT ===');
+    console.log(systemPrompt);
+    console.log('\n=== USER PROMPT ===');
+    console.log(userPrompt);
+    console.log('===================\n');
+
     const stream = await cerebras.chat.completions.create({
       messages: messages,
       model: 'qwen-3-235b-a22b-instruct-2507',
       stream: true,
       max_completion_tokens: 20000,
-      temperature: 0.7,
+      temperature: 0.7,  // Increased for much more variety
       top_p: 0.8
     });
 
@@ -97,12 +134,18 @@ Return ONLY the raw HTML code, no markdown formatting, no explanations.`;
     res.setHeader('Content-Type', 'text/plain');
     res.setHeader('Transfer-Encoding', 'chunked');
 
+    let fullResponse = '';
     for await (const chunk of stream) {
       const content = chunk.choices[0]?.delta?.content || '';
       if (content) {
+        fullResponse += content;
         res.write(content);
       }
     }
+
+    console.log('\n--- LLM Response ---');
+    console.log(fullResponse.substring(0, 500) + '...');  // Print first 500 chars
+    console.log('--- End Response ---\n');
 
     res.end();
   } catch (error) {
