@@ -103,13 +103,16 @@ class DreamRender {
         }
     }
 
-    async navigateToPage(linkText, elementType) {
+    async navigateToPage(linkText, elementType, dataPath) {
         if (this.isGenerating) return;
 
+        // Use data-path or link text as cache key
+        const cacheKey = dataPath || linkText;
+
         // Check if page is already cached
-        const cachedPage = this.getStoredPage(linkText);
+        const cachedPage = this.getStoredPage(cacheKey);
         if (cachedPage) {
-            console.log(`Loading cached page: ${linkText}`);
+            console.log(`Loading cached page: ${cacheKey}`);
             this.currentHTML = cachedPage;
             this.currentContext = cachedPage;
             this.renderContent(cachedPage);
@@ -122,11 +125,11 @@ class DreamRender {
         this.content.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
 
         try {
-            const prompt = `User clicked on "${linkText}" (${elementType}). Generate the appropriate page for this navigation within the existing website.`;
+            const prompt = dataPath ? `${linkText} (path: ${dataPath})` : linkText;
             const html = await this.callAPI(prompt, this.currentContext);
             this.currentHTML = html;
             this.currentContext = html; // Update context to new page
-            this.storePage(linkText, html); // Cache the newly generated page
+            this.storePage(cacheKey, html); // Cache the newly generated page
             this.renderContent(html);
         } catch (error) {
             console.error('Error:', error);
@@ -191,7 +194,7 @@ class DreamRender {
 
     attachClickHandlers() {
         // Get all clickable elements in the generated content
-        const clickableElements = this.content.querySelectorAll('a, button, [data-navigate]');
+        const clickableElements = this.content.querySelectorAll('a, button, [data-navigate], [data-path]');
 
         clickableElements.forEach(element => {
             element.addEventListener('click', (e) => {
@@ -200,8 +203,9 @@ class DreamRender {
 
                 const linkText = element.textContent.trim() || element.getAttribute('aria-label') || element.getAttribute('title') || 'Unnamed link';
                 const elementType = element.tagName.toLowerCase();
+                const dataPath = element.getAttribute('data-path');
 
-                this.navigateToPage(linkText, elementType);
+                this.navigateToPage(linkText, elementType, dataPath);
             });
         });
 
@@ -212,7 +216,8 @@ class DreamRender {
                 e.preventDefault();
                 const submitBtn = form.querySelector('[type="submit"]');
                 const linkText = submitBtn ? submitBtn.textContent.trim() : 'Form submission';
-                this.navigateToPage(linkText, 'form');
+                const dataPath = submitBtn ? submitBtn.getAttribute('data-path') : null;
+                this.navigateToPage(linkText, 'form', dataPath);
             });
         });
     }
