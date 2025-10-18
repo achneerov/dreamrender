@@ -35,7 +35,7 @@ const contexts = new Map();
 
 app.post('/api/generate', async (req, res) => {
   try {
-    const { prompt, sessionId, currentContext } = req.body;
+    const { prompt, sessionId, currentContext, cachedPages } = req.body;
 
     // Build the system prompt based on whether this is initial generation or navigation
     let systemPrompt;
@@ -79,10 +79,18 @@ Return ONLY raw HTML, no markdown, no explanations.`;
       userPrompt = prompt || `Create a visually stunning, impressive website for a business called "${randomWords[0]} ${randomWords[1]}" that sells/provides ${randomWords[2]} and ${randomWords[3]} services. Make it look modern, beautiful, and professional with amazing visual design.`;
     } else {
       // Navigation to a new page within the same website context
+      const cachedPagesInfo = cachedPages && cachedPages.length > 0
+        ? `\n\nPREVIOUSLY VISITED PAGES (already cached - user can navigate back to these instantly):
+${cachedPages.map(page => `- "${page}"`).join('\n')}
+
+IMPORTANT: When creating navigation links/buttons, if a link would logically lead to one of the previously visited pages listed above, use the EXACT same text as shown above (case-sensitive). This allows instant navigation without regenerating the page.
+For example, if "Home" is in the cached pages list, create a button with text "Home" (not "Homepage" or "Go Home").`
+        : '';
+
       systemPrompt = `You are an expert web designer generating a new page for an existing website.
 
 The user is currently viewing this page:
-${currentContext}
+${currentContext}${cachedPagesInfo}
 
 Generate a complete HTML page that fits within this website's theme and style. The page should:
 - Match the design style, color scheme, fonts, and CSS styling from the current page

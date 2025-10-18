@@ -5,12 +5,77 @@ class DreamRender {
         this.isGenerating = false;
         this.currentHTML = '';
         this.content = document.getElementById('content');
+        this.pageCache = {}; // In-memory cache for this session
+        this.cacheKeyPrefix = 'dreamrender_page_';
+
+        // Clear all previous session caches on initialization
+        this.clearOldCaches();
 
         this.init();
     }
 
     generateSessionId() {
         return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    // Clear all old dreamrender caches from sessionStorage
+    clearOldCaches() {
+        try {
+            const keysToRemove = [];
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                if (key && key.startsWith(this.cacheKeyPrefix)) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => sessionStorage.removeItem(key));
+            console.log(`Cleared ${keysToRemove.length} old cached pages`);
+        } catch (e) {
+            console.warn('Failed to clear old caches:', e);
+        }
+    }
+
+    // Create a cache key from link text
+    createCacheKey(linkText) {
+        return this.cacheKeyPrefix + linkText.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    }
+
+    // Store a page in sessionStorage
+    storePage(linkText, html) {
+        const key = this.createCacheKey(linkText);
+        try {
+            sessionStorage.setItem(key, html);
+            this.pageCache[linkText] = html;
+        } catch (e) {
+            console.warn('Failed to store page in sessionStorage:', e);
+        }
+    }
+
+    // Retrieve a page from sessionStorage
+    getStoredPage(linkText) {
+        // Check in-memory cache first
+        if (this.pageCache[linkText]) {
+            return this.pageCache[linkText];
+        }
+
+        // Check sessionStorage
+        const key = this.createCacheKey(linkText);
+        try {
+            const html = sessionStorage.getItem(key);
+            if (html) {
+                this.pageCache[linkText] = html;
+            }
+            return html;
+        } catch (e) {
+            console.warn('Failed to retrieve page from sessionStorage:', e);
+            return null;
+        }
+    }
+
+    // Get list of all cached page names for the LLM to reference
+    getCachedPageNames() {
+        const names = Object.keys(this.pageCache);
+        return names.length > 0 ? names : [];
     }
 
     init() {
@@ -28,6 +93,7 @@ class DreamRender {
             const html = await this.callAPI('Create a random, creative website', null);
             this.currentHTML = html;
             this.currentContext = html; // Pass entire HTML as context
+            this.storePage('Home', html); // Cache the home page
             this.renderContent(html);
         } catch (error) {
             console.error('Error:', error);
@@ -40,6 +106,17 @@ class DreamRender {
     async navigateToPage(linkText, elementType) {
         if (this.isGenerating) return;
 
+        // Check if page is already cached
+        const cachedPage = this.getStoredPage(linkText);
+        if (cachedPage) {
+            console.log(`Loading cached page: ${linkText}`);
+            this.currentHTML = cachedPage;
+            this.currentContext = cachedPage;
+            this.renderContent(cachedPage);
+            return;
+        }
+
+        // Page not cached, generate it
         this.isGenerating = true;
         const previousContent = this.content.innerHTML;
         this.content.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
@@ -49,6 +126,7 @@ class DreamRender {
             const html = await this.callAPI(prompt, this.currentContext);
             this.currentHTML = html;
             this.currentContext = html; // Update context to new page
+            this.storePage(linkText, html); // Cache the newly generated page
             this.renderContent(html);
         } catch (error) {
             console.error('Error:', error);
@@ -60,6 +138,8 @@ class DreamRender {
     }
 
     async callAPI(prompt, currentContext) {
+        const cachedPages = this.getCachedPageNames();
+
         const response = await fetch('/api/generate', {
             method: 'POST',
             headers: {
@@ -68,7 +148,8 @@ class DreamRender {
             body: JSON.stringify({
                 prompt,
                 sessionId: this.sessionId,
-                currentContext
+                currentContext,
+                cachedPages // Send list of cached pages to LLM
             })
         });
 
