@@ -71,31 +71,26 @@ The HTML must:
 - Include impressive inline CSS in <style> tag
 - Include inline JavaScript for interactivity
 - Have clickable links/buttons with data-navigate attributes
+- IMPORTANT: ALL buttons must have data-navigate attribute and be clickable - no decorative non-clickable buttons
+- Every button in the hero section MUST be functional and navigable
 
 Return ONLY raw HTML, no markdown, no explanations.`;
 
       userPrompt = prompt || `Create a visually stunning, impressive website for a business called "${randomWords[0]} ${randomWords[1]}" that sells/provides ${randomWords[2]} and ${randomWords[3]} services. Make it look modern, beautiful, and professional with amazing visual design.`;
     } else {
       // Navigation to a new page within the same website context
-      systemPrompt = `You are a creative web designer and developer. You are generating a new page for an existing website.
-
-IMPORTANT: You MUST include this exact script tag at the top of the <head> section:
-<script src="https://cdn.tailwindcss.com"></script>
+      systemPrompt = `You are an expert web designer generating a new page for an existing website.
 
 The user is currently viewing this page:
 ${currentContext}
 
 Generate a complete HTML page that fits within this website's theme and style. The page should:
-- MUST include <script src="https://cdn.tailwindcss.com"></script> as the FIRST thing in the <head> section
-- Match the EXACT design style, color scheme, fonts, and Tailwind classes from the current page
-- Use the same Tailwind color palette, spacing, and layout patterns as the current page
+- Match the design style, color scheme, fonts, and CSS styling from the current page
+- You can reuse CSS from the previous page but adapt it as needed. For example, I don't expect a hero section on every page.
 - Be a logical page within this website's structure (about, contact, services, products, etc.)
-- Include similar navigation elements to the current page with matching Tailwind styling
-- Maintain complete visual consistency with the existing website
-- Use Tailwind CSS utility classes for ALL styling (copy the class patterns from the current page)
+- Include inline CSS in <style> tag that matches the website's aesthetic
 - Include inline JavaScript for interactivity if needed
-- Have clickable elements (links, buttons) for further navigation
-- Use responsive design with Tailwind's responsive classes
+- Have clickable elements (links, buttons) for further navigation with data-navigate attributes
 
 Return ONLY the raw HTML code, no markdown formatting, no explanations.`;
 
@@ -129,7 +124,7 @@ Return ONLY the raw HTML code, no markdown formatting, no explanations.`;
 
     const stream = await cerebras.chat.completions.create({
       messages: messages,
-      model: 'gpt-oss-120b',
+      model: 'qwen-3-235b-a22b-instruct-2507',
       stream: true,
       max_completion_tokens: 20000,
       temperature: 0.7,  // Increased for much more variety

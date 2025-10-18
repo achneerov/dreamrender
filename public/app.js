@@ -83,6 +83,10 @@ class DreamRender {
     cleanHTML(html) {
         // Remove markdown code blocks if present
         html = html.replace(/```html\n?/g, '').replace(/```\n?/g, '');
+
+        // Remove <think> tags and their content
+        html = html.replace(/<think>[\s\S]*?<\/think>/gi, '');
+
         html = html.trim();
         return html;
     }
