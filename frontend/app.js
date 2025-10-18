@@ -140,7 +140,10 @@ class DreamRender {
     async callAPI(prompt, currentContext) {
         const cachedPages = this.getCachedPageNames();
 
-        const response = await fetch('/api/generate', {
+        // const API_URL = 'http://localhost:3000/api/generate';
+        const API_URL = 'https://dreamrender-alpha.vercel.app/api/generate'; // Backend API URL
+
+        const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -28,7 +28,6 @@ function getRandomKeywords(count = 10) {
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
 
 // Store website context (in production, use a database or session storage)
 const contexts = new Map();

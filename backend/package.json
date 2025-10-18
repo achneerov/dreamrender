@@ -1,7 +1,7 @@
 {
-  "name": "dreamrender",
+  "name": "dreamrender-backend",
   "version": "1.0.0",
-  "description": "Dynamic AI-generated website using Cerebras",
+  "description": "Backend API server for DreamRender",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -17,7 +17,8 @@
   "keywords": [
     "ai",
     "cerebras",
-    "dynamic-website"
+    "backend",
+    "api"
   ],
   "author": "",
   "license": "MIT"

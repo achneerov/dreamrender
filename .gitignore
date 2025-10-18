@@ -1,8 +1,25 @@
+# Dependencies
 node_modules/
+package-lock.json
+
+# Environment variables
 .env
-.DS_Store
+backend/.env
+frontend/.env
+
+# Logs
+*.log
 npm-debug.log
 yarn-error.log
-*.log
+
+# OS files
+.DS_Store
+
+# IDE
 .vscode/
 .idea/
+.claude/
+
+# Build outputs
+dist/
+build/
