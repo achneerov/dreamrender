@@ -1,56 +1,107 @@
 # DreamRender
 
-An AI-powered dynamic website generator that creates unique, interactive websites on-the-fly using the Cerebras API.
+An AI-powered dynamic website generator that creates infinite, navigable websites on-the-fly using Cerebras AI.
 
-## Features
+## Project Structure
 
-- **Random Website Generation**: Click a button to generate a completely random website with unique design and content
-- **Context-Aware Navigation**: Click any link or button in the generated website to create new pages that fit the context
-- **Real-time AI Streaming**: Watch as the AI generates pages in real-time
-- **Infinite Exploration**: Every navigation generates a new, contextually relevant page
+```
+dreamrender/
+├── .gitignore         # Git ignore rules
+├── README.md          # This file
+├── backend/           # Node.js API server
+│   ├── .env          # API keys (not committed)
+│   ├── server.js     # Express + Cerebras integration
+│   ├── keywords.json # Keywords for variety
+│   ├── package.json
+│   └── README.md
+└── frontend/          # Static HTML/JS (no build needed!)
+    ├── index.html    # Main page
+    ├── app.js        # Vanilla JavaScript
+    └── README.md
+```
 
-## How It Works
+## Quick Start
 
-1. Click "Generate Random Website" to create an initial random website
-2. The AI generates a complete HTML page with styling and interactivity
-3. Click any link, button, or navigation element
-4. The AI generates a new page that fits within the context of the current website
-5. Continue exploring - the AI maintains context throughout your session
+### 1. Backend Setup
 
-## Setup
-
-1. Install dependencies:
 ```bash
+cd backend
 npm install
 ```
 
-2. Make sure your `.env` file contains your Cerebras API key:
+Create `backend/.env`:
 ```
 CEREBRAS_API_KEY=your_api_key_here
 PORT=3000
 ```
 
-3. Start the server:
+Start backend:
 ```bash
 npm start
 ```
 
-4. Open your browser to `http://localhost:3000`
+### 2. Frontend Setup
 
-## Technologies Used
+The frontend is just plain HTML and JavaScript - no build step needed!
 
-- **Backend**: Node.js, Express
-- **AI**: Cerebras Cloud SDK (Qwen 3 235B model)
-- **Frontend**: Vanilla JavaScript, HTML5, CSS3
+**Option A: Just open the file**
+```bash
+cd frontend
+open index.html
+```
 
-## How It Maintains Context
+**Option B: Use a local server** (recommended to avoid CORS issues)
+```bash
+cd frontend
+python3 -m http.server 8080
+# Then visit http://localhost:8080
+```
 
-The system extracts key information from each generated page:
-- Page titles and headings
-- Content structure
-- Website theme and purpose
+## How It Works
 
-This context is passed to subsequent AI generations, ensuring coherent navigation experiences.
+1. **Backend** (`backend/server.js`):
+   - Receives generation requests from frontend
+   - Calls Cerebras AI with context-aware prompts
+   - Streams HTML responses back to client
+   - Manages sessions and context
+
+2. **Frontend** (`frontend/app.js`):
+   - Displays AI-generated HTML
+   - Intercepts all clicks on links/buttons
+   - Sends click context to backend
+   - Renders new pages seamlessly
+
+3. **The Magic**:
+   - Every click generates a new page
+   - Each page maintains the website's design style
+   - Infinite navigation possibilities
+   - No pre-defined structure - it's all AI-generated!
+
+## Features
+
+- **Infinite Navigation**: Click any link to generate a new contextual page
+- **Design Consistency**: AI maintains color schemes, fonts, and styling across pages
+- **Random Themes**: Each initial load creates a unique website based on random keywords
+- **Fast Generation**: Powered by Cerebras for ultra-fast inference
+- **Streaming Responses**: See content appear in real-time
+
+## Configuration
+
+Edit `backend/server.js` to change:
+- AI model (currently `qwen-3-235b-a22b-instruct-2507`)
+- Temperature (creativity level)
+- Max tokens (response length)
+- System prompts (design requirements)
+
+## Development
+
+```bash
+# Terminal 1 - Backend
+cd backend && npm start
+
+# Terminal 2 - Frontend (optional, just serves static files)
+cd frontend && python3 -m http.server 8080
+```
 
 ## License
 
