@@ -40,12 +40,15 @@ app.post('/api/generate', async (req, res) => {
     let userPrompt;
 
     if (!currentContext) {
-      // Initial website generation
-      userPrompt = `Create a random, creative, visually stunning website. The HTML must be complete with <!DOCTYPE html>, head, body tags, inline CSS, and inline JavaScript.
+      // Initial website generation - pick a random keyword
+      const randomKeyword = keywords[Math.floor(Math.random() * keywords.length)];
+
+      userPrompt = `Create a random, creative, visually stunning website with a theme related to: "${randomKeyword}". The HTML must be complete with <!DOCTYPE html>, head, body tags, inline CSS, and inline JavaScript.
 
 IMPORTANT:
 - Make it fully responsive and look good on mobile devices (use media queries, flexible layouts, mobile-friendly font sizes)
 - Every button and link MUST have a data-path attribute with an imaginary path (e.g., data-path="/about", data-path="/products/category1", data-path="/contact"). These paths should be logical and represent where that button would navigate to.
+- Use the theme "${randomKeyword}" creatively to inspire the design, content, and overall aesthetic
 
 Return ONLY raw HTML, no markdown, no explanations.`;
     } else {
