@@ -36,72 +36,45 @@ app.post('/api/generate', async (req, res) => {
   try {
     const { prompt, sessionId, currentContext, cachedPages } = req.body;
 
-    // Build the system prompt based on whether this is initial generation or navigation
-    let systemPrompt;
+    // Build the user prompt based on whether this is initial generation or navigation
     let userPrompt;
 
     if (!currentContext) {
-      // Initial website generation
-      // Get random keywords to inspire variety
-      const randomWords = getRandomKeywords(5);  // Reduced to 5 for clarity
-      console.log('Selected keywords:', randomWords);
+      // Initial website generation - pick a random keyword
+      const randomKeyword = keywords[Math.floor(Math.random() * keywords.length)];
 
-      systemPrompt = `You are an expert web designer creating a visually stunning website for: ${randomWords.join(', ')}
+      userPrompt = `Create a random, creative, visually stunning website with a theme related to: "${randomKeyword}". The HTML must be complete with <!DOCTYPE html>, head, body tags, inline CSS, and inline JavaScript.
 
-MANDATORY REQUIREMENTS:
-- Create a website that is themed around: ${randomWords.join(', ')}
-- Example: if keywords are "dental, toys" then make "Dental Toys for Kids" NOT "Creative Design Studio"
-
-DESIGN REQUIREMENTS - MAKE IT IMPRESSIVE:
-- Use modern, eye-catching color gradients and schemes
-- Include stunning visual effects (hover effects, animations, transitions)
-- Use creative layouts with interesting sections and cards
-- Add beautiful typography with multiple font weights
-- Include CSS animations and smooth transitions
-- Make it look like a premium, professional website
-- Use modern CSS features (flexbox, grid, box-shadows, border-radius)
-- Add interactive elements with JavaScript
-- Make buttons and links have satisfying hover effects
-- Give the website a surreal, dreamlike, ethereal atmosphere (but do NOT use the word "dream" anywhere in the website)
-- Use unconventional color combinations and flowing animations to create an otherworldly feel
-
-The HTML must:
-- Have <!DOCTYPE html>, head, body tags
-- Include impressive inline CSS in <style> tag
-- Include inline JavaScript for interactivity
-- Have clickable links/buttons with data-navigate attributes
-- IMPORTANT: ALL buttons must have data-navigate attribute and be clickable - no decorative non-clickable buttons
-- Every button in the hero section MUST be functional and navigable
+IMPORTANT:
+- Make it fully responsive and look good on mobile devices (use media queries, flexible layouts, mobile-friendly font sizes)
+- Every button and link MUST have a data-path attribute with an imaginary path (e.g., data-path="/about", data-path="/products/category1", data-path="/contact"). These paths should be logical and represent where that button would navigate to.
+- Use the theme "${randomKeyword}" creatively to inspire the design, content, and overall aesthetic
 
 Return ONLY raw HTML, no markdown, no explanations.`;
-
-      userPrompt = prompt || `Create a visually stunning, impressive website for a business called "${randomWords[0]} ${randomWords[1]}" that sells/provides ${randomWords[2]} and ${randomWords[3]} services. Make it look modern, beautiful, and professional with amazing visual design.`;
     } else {
       // Navigation to a new page within the same website context
       const cachedPagesInfo = cachedPages && cachedPages.length > 0
-        ? `\n\nPREVIOUSLY VISITED PAGES (already cached - user can navigate back to these instantly):
+        ? `\n\nPREVIOUSLY VISITED PAGES (user can go back to these):
 ${cachedPages.map(page => `- "${page}"`).join('\n')}
 
-IMPORTANT: When creating navigation links/buttons, if a link would logically lead to one of the previously visited pages listed above, use the EXACT same text as shown above (case-sensitive). This allows instant navigation without regenerating the page.
-For example, if "Home" is in the cached pages list, create a button with text "Home" (not "Homepage" or "Go Home").`
+If you create navigation back to these pages, use the exact same text.`
         : '';
 
-      systemPrompt = `You are an expert web designer generating a new page for an existing website.
+      userPrompt = `Here is the previous page HTML that the user was viewing:
 
-The user is currently viewing this page:
-${currentContext}${cachedPagesInfo}
+${currentContext}
 
-Generate a complete HTML page that fits within this website's theme and style. The page should:
-- Match the design style, color scheme, fonts, and CSS styling from the current page
-- You can reuse CSS from the previous page but adapt it as needed. For example, I don't expect a hero section on every page.
-- Be a logical page within this website's structure (about, contact, services, products, etc.)
-- Include inline CSS in <style> tag that matches the website's aesthetic
-- Include inline JavaScript for interactivity if needed
-- Have clickable elements (links, buttons) for further navigation with data-navigate attributes
+The user clicked on a button with this text/path: "${prompt}"
 
-Return ONLY the raw HTML code, no markdown formatting, no explanations.`;
+Generate the next page as complete HTML. Make sure to:
+- Match the design style, color scheme, and aesthetic from the previous page
+- Create a logical next page based on what button was clicked
+- Include complete HTML with <!DOCTYPE html>, head, body, inline CSS, and inline JavaScript
+- Make it fully responsive and look good on mobile devices (use media queries, flexible layouts, mobile-friendly font sizes)
+- IMPORTANT: Every button and link MUST have a data-path attribute with an imaginary path (e.g., data-path="/services/pricing", data-path="/blog/post1")
+${cachedPagesInfo}
 
-      userPrompt = prompt;
+Return ONLY raw HTML, no markdown, no explanations.`;
     }
 
     // Store context for this session
@@ -114,17 +87,11 @@ Return ONLY the raw HTML code, no markdown formatting, no explanations.`;
 
     const messages = [
       {
-        role: "system",
-        content: systemPrompt
-      },
-      {
         role: "user",
         content: userPrompt
       }
     ];
 
-    console.log('\n=== SYSTEM PROMPT ===');
-    console.log(systemPrompt);
     console.log('\n=== USER PROMPT ===');
     console.log(userPrompt);
     console.log('===================\n');
