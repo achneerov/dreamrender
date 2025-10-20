@@ -140,11 +140,15 @@ class DreamRender {
         }
     }
 
+    getBaseURL() {
+        // return 'http://localhost:3000';
+        return 'https://dreamrender-alpha.vercel.app';
+    }
+
     async callAPI(prompt, currentContext) {
         const cachedPages = this.getCachedPageNames();
 
-        const API_URL = 'http://localhost:3000/api/generate';
-        //const API_URL = 'https://dreamrender-alpha.vercel.app/api/generate'; // Backend API URL
+        const API_URL = `${this.getBaseURL()}/api/generate`;
 
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -215,7 +219,7 @@ class DreamRender {
                 else if (height > width * 1.2) orientation = 'vertical';
 
                 // Fetch image from Pixabay API
-                const API_URL = 'http://localhost:3000/api/images/search';
+                const API_URL = `${this.getBaseURL()}/api/images/search`;
                 const params = new URLSearchParams({
                     q: keyword,
                     per_page: 3,
