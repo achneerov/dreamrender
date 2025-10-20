@@ -140,11 +140,15 @@ class DreamRender {
         }
     }
 
+    getBaseURL() {
+        // return 'http://localhost:3000';
+        return 'https://dreamrender-alpha.vercel.app';
+    }
+
     async callAPI(prompt, currentContext) {
         const cachedPages = this.getCachedPageNames();
 
-        // const API_URL = 'http://localhost:3000/api/generate';
-        const API_URL = 'https://dreamrender-alpha.vercel.app/api/generate'; // Backend API URL
+        const API_URL = `${this.getBaseURL()}/api/generate`;
 
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -190,6 +194,69 @@ class DreamRender {
         }
 
         this.attachClickHandlers();
+        this.loadPixabayImages();
+    }
+
+    async loadPixabayImages() {
+        // Find all elements with class 'image' that have data attributes
+        const imageElements = this.content.querySelectorAll('.image[data-keyword]');
+
+        imageElements.forEach(async (element) => {
+            try {
+                // Get keyword and dimensions from data attributes
+                const keyword = element.getAttribute('data-keyword');
+                const width = parseInt(element.getAttribute('data-width')) || 800;
+                const height = parseInt(element.getAttribute('data-height')) || 600;
+
+                if (!keyword) {
+                    console.warn('Image element missing data-keyword attribute');
+                    return;
+                }
+
+                // Determine orientation based on dimensions
+                let orientation = 'all';
+                if (width > height * 1.2) orientation = 'horizontal';
+                else if (height > width * 1.2) orientation = 'vertical';
+
+                // Fetch image from Pixabay API
+                const API_URL = `${this.getBaseURL()}/api/images/search`;
+                const params = new URLSearchParams({
+                    q: keyword,
+                    per_page: 3,
+                    orientation: orientation
+                });
+
+                const response = await fetch(`${API_URL}?${params.toString()}`);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`Pixabay API error for "${keyword}":`, response.status, errorText);
+                    throw new Error(`Failed to fetch image: ${response.status} - ${errorText}`);
+                }
+
+                const data = await response.json();
+
+                if (data.hits && data.hits.length > 0) {
+                    const image = data.hits[0];
+
+                    // Create img element
+                    const img = document.createElement('img');
+                    img.src = image.webformatURL;
+                    img.alt = image.tags;
+                    img.style.width = width ? `${width}px` : '100%';
+                    img.style.height = height ? `${height}px` : 'auto';
+                    img.style.objectFit = 'cover';
+
+                    // Replace element content with image
+                    element.innerHTML = '';
+                    element.appendChild(img);
+                } else {
+                    console.warn(`No images found for keyword: ${keyword}`);
+                }
+            } catch (error) {
+                console.error('Error loading Pixabay image:', error);
+            }
+        });
     }
 
     attachClickHandlers() {

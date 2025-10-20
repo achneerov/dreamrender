@@ -32,6 +32,53 @@ app.use(express.json());
 // Store website context (in production, use a database or session storage)
 const contexts = new Map();
 
+// Pixabay API endpoint for image search
+app.get('/api/images/search', async (req, res) => {
+  try {
+    const { q, image_type = 'photo', per_page = 3, page = 1, orientation, category } = req.query;
+
+    if (!q) {
+      return res.status(400).json({ error: 'Search query (q) is required' });
+    }
+
+    // Pixabay requires per_page to be at least 3
+    const validPerPage = Math.max(3, parseInt(per_page) || 3);
+
+    // Build Pixabay API URL
+    const params = new URLSearchParams({
+      key: process.env.PIXABAY_API_KEY,
+      q: q,
+      image_type: image_type,
+      per_page: validPerPage,
+      page: page,
+      safesearch: 'true'
+    });
+
+    if (orientation) params.append('orientation', orientation);
+    if (category) params.append('category', category);
+
+    const pixabayUrl = `https://pixabay.com/api/?${params.toString()}`;
+
+    console.log('Pixabay API request:', pixabayUrl.replace(process.env.PIXABAY_API_KEY, 'API_KEY_HIDDEN'));
+    console.log('API key present:', !!process.env.PIXABAY_API_KEY);
+
+    // Fetch from Pixabay
+    const response = await fetch(pixabayUrl);
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error('Pixabay error response:', response.status, errorBody);
+      throw new Error(`Pixabay API error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching images from Pixabay:', error);
+    res.status(500).json({ error: 'Failed to fetch images', details: error.message });
+  }
+});
+
 app.post('/api/generate', async (req, res) => {
   try {
     const { prompt, sessionId, currentContext, cachedPages } = req.body;
@@ -49,6 +96,7 @@ IMPORTANT:
 - Make it fully responsive and look good on mobile devices (use media queries, flexible layouts, mobile-friendly font sizes)
 - Every button and link MUST have a data-path attribute with an imaginary path (e.g., data-path="/about", data-path="/products/category1", data-path="/contact"). These paths should be logical and represent where that button would navigate to.
 - Use the theme "${randomKeyword}" creatively to inspire the design, content, and overall aesthetic
+- For images, create div elements with class="image" and use data attributes: data-keyword (search term), data-width (in pixels), and data-height (in pixels). Example: <div class="image" data-keyword="sunset beach" data-width="1200" data-height="800"></div>. The frontend will automatically fetch and load images from Pixabay. Do NOT use <img> tags - the system handles this automatically.
 
 Return ONLY raw HTML, no markdown, no explanations.`;
     } else {
@@ -72,6 +120,7 @@ Generate the next page as complete HTML. Make sure to:
 - Include complete HTML with <!DOCTYPE html>, head, body, inline CSS, and inline JavaScript
 - Make it fully responsive and look good on mobile devices (use media queries, flexible layouts, mobile-friendly font sizes)
 - IMPORTANT: Every button and link MUST have a data-path attribute with an imaginary path (e.g., data-path="/services/pricing", data-path="/blog/post1")
+- For images, create div elements with class="image" and use data attributes: data-keyword (search term), data-width (in pixels), and data-height (in pixels). Example: <div class="image" data-keyword="sunset beach" data-width="1200" data-height="800"></div>. The frontend will automatically fetch and load images from Pixabay. Do NOT use <img> tags - the system handles this automatically.
 ${cachedPagesInfo}
 
 Return ONLY raw HTML, no markdown, no explanations.`;
